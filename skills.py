@@ -8,7 +8,7 @@ import re
 
 alias = { 'js' : 'javascript', 'angular' : 'angularjs' }
 
-def parse_text(text, words, english_words):
+def parse_text(text, words, common_words):
   # Remove HTML tags
   text = re.sub(r'<[^>]*?>', ' ', text) # Do this properly next time
   text = text.replace('\\n', ' ')
@@ -25,7 +25,7 @@ def parse_text(text, words, english_words):
     if len(word) == 1 and not word.isalpha():
       continue
 
-    if word in english_words:
+    if word in common_words:
       continue
 
     if word in alias:
@@ -36,19 +36,19 @@ def parse_text(text, words, english_words):
   for word in words_new:
     words[word] += 1
 
-def parse_json_recursively(contents, words, english_words):
+def parse_json_recursively(contents, words, common_words):
   if 'text' in contents:
-    parse_text(contents['text'], words, english_words)
+    parse_text(contents['text'], words, common_words)
   if 'children' in contents and len(contents['children']) > 0:
     for child in contents['children']:
-      parse_json_recursively(child, words, english_words)
+      parse_json_recursively(child, words, common_words)
   
 def top(words):
   words = words.items()
   words = sorted(words, key=operator.itemgetter(1), reverse=True)
   return words
 
-def english_words(filename):
+def read_common_words(filename):
   f = open(filename, 'r')
   ret = set()
   for line in f.readlines():
@@ -62,25 +62,31 @@ def retrieve_json(url):
   contents = json.loads(contents)
   return contents
 
-def parse(contents):
+def parse(contents, limit=20):
   words = defaultdict(int)
-  parse_json_recursively(contents, words, english_words('english.txt'))
+  parse_json_recursively(contents, words, read_common_words('english.txt'))
   popular = top(words)
-  return popular[:40]
+  return popular[:limit]
 
-def print_stats(id):
+def get_stats(id):
+  ret = {}
   url = "https://hn.algolia.com/api/v1/items/{}".format(id)
   contents = retrieve_json(url)
-  print contents['title']
+  ret['title'] = contents['title']
 
   popular = parse(contents)
-  for word, score in popular:
-    print score,word
+  ret['scores'] = popular
+  return ret
+
+def print_stats(stats):
+  print(stats['title'])
+  for word, score in stats['scores']:
+    print(score, word)
 
 def main():
   ids = [5803767]
   for id in ids:
-    print_stats(id)
+    print_stats(get_stats(id))
 
 if __name__ == '__main__':
   main()
