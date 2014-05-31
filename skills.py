@@ -6,7 +6,7 @@ import json
 import operator
 import re
 
-alias = { 'js' : 'javascript', 'angular' : 'angularjs', 'backbone' : 'backbone.js', 'consultant' : 'consulting', 'postgres' : 'postgresql' }
+alias = { 'js' : 'javascript', 'angular' : 'angularjs', 'backbone' : 'backbone.js', 'consultant' : 'consulting', 'postgres' : 'postgresql', 'ror' : 'rails' }
 
 def parse_text(text, words, common_words):
   # Remove HTML tags
@@ -16,7 +16,18 @@ def parse_text(text, words, common_words):
 
   h = HTMLParser.HTMLParser()
 
-  for word in text.split():
+  text_words = text.split()
+
+  # Split cases such as 'html/css' and 'python/django'
+  split_words = []
+  for word in text_words:
+    if '/' in word and 'http' not in word:
+      split_words.append(word)
+  for split_word in split_words:
+    text_words.extend(split_word.split('/'))
+    text_words.remove(split_word)
+    
+  for word in text_words:
     word = word.lower().strip()
     word = word.strip('(){},.\"!?[]:')
 
@@ -79,9 +90,9 @@ def get_stats(id, limit=20):
   return ret
 
 def print_stats(stats):
-  print(stats['title'])
+  print stats['title']
   for word, score in stats['scores']:
-    print(score, word)
+    print score, word
 
 def main():
   ids = [5803767]

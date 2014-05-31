@@ -1,16 +1,20 @@
 import skills
 import os
+import sys
 
 results_dir = 'results'
 
-f_in = open('threads-lite.txt', 'r')
-for line in f_in.readlines():
+filename = sys.argv[1]
+
+f_in = open(filename, 'r')
+for i, line in enumerate(f_in.readlines()):
   line = line.strip()
   if not line: 
     continue
 
   year, month, id = line.split()
-  filename = '{}-{}.txt'.format(year, month)
+  print year, month
+  filename = '{}-{}-{}.txt'.format(i, year, month)
   f_out = open(os.path.join(results_dir, filename), 'w')
   #f_out.write('{} {}\n'.format(year, month))
 
