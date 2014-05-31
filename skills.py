@@ -6,7 +6,7 @@ import json
 import operator
 import re
 
-alias = { 'js' : 'javascript', 'angular' : 'angularjs' }
+alias = { 'js' : 'javascript', 'angular' : 'angularjs', 'backbone' : 'backbone.js', 'consultant' : 'consulting', 'postgres' : 'postgresql' }
 
 def parse_text(text, words, common_words):
   # Remove HTML tags
@@ -68,13 +68,13 @@ def parse(contents, limit=20):
   popular = top(words)
   return popular[:limit]
 
-def get_stats(id):
+def get_stats(id, limit=20):
   ret = {}
   url = "https://hn.algolia.com/api/v1/items/{}".format(id)
   contents = retrieve_json(url)
   ret['title'] = contents['title']
 
-  popular = parse(contents)
+  popular = parse(contents, limit)
   ret['scores'] = popular
   return ret
 
