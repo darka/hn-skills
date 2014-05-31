@@ -66,7 +66,7 @@ def parse(contents):
   words = defaultdict(int)
   parse_json_recursively(contents, words, english_words('english.txt'))
   popular = top(words)
-  return popular[:20]
+  return popular[:40]
 
 def print_stats(id):
   url = "https://hn.algolia.com/api/v1/items/{}".format(id)
@@ -75,10 +75,10 @@ def print_stats(id):
 
   popular = parse(contents)
   for word, score in popular:
-    print word
+    print score,word
 
 def main():
-  ids = [7679422, 7324231]
+  ids = [5803767]
   for id in ids:
     print_stats(id)
 
