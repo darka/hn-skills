@@ -6,18 +6,19 @@ import json
 import operator
 import re
 
-alias = { 'js' : 'javascript' }
+alias = { 'js' : 'javascript', 'angular' : 'angularjs' }
 
 def parse_text(text, words, english_words):
   # Remove HTML tags
-  text = re.sub(r'<[^>]*?>', '', text) # Do this properly next time
+  text = re.sub(r'<[^>]*?>', ' ', text) # Do this properly next time
+  text = text.replace('\\n', ' ')
   words_new = set() 
 
   h = HTMLParser.HTMLParser()
 
   for word in text.split():
     word = word.lower().strip()
-    word = word.strip('(){},.\"!?[]')
+    word = word.strip('(){},.\"!?[]:')
 
     word = h.unescape(word)
 
@@ -35,12 +36,12 @@ def parse_text(text, words, english_words):
   for word in words_new:
     words[word] += 1
 
-def parse(contents, words, english_words):
+def parse_json_recursively(contents, words, english_words):
   if 'text' in contents:
     parse_text(contents['text'], words, english_words)
   if 'children' in contents and len(contents['children']) > 0:
     for child in contents['children']:
-      parse(child, words, english_words)
+      parse_json_recursively(child, words, english_words)
   
 def top(words):
   words = words.items()
@@ -52,23 +53,34 @@ def english_words(filename):
   ret = set()
   for line in f.readlines():
     line = line.strip()
-    if line:
+    if line and line[0] != '#':
       ret.add(line)
   return ret
 
-def main():
-  id = 7679422
-
-  url = "https://hn.algolia.com/api/v1/items/{}".format(id)
+def retrieve_json(url):
   contents = urllib2.urlopen(url).read()
   contents = json.loads(contents)
+  return contents
 
+def parse(contents):
   words = defaultdict(int)
-  parse(contents, words, english_words('english.txt'))
+  parse_json_recursively(contents, words, english_words('english.txt'))
   popular = top(words)
+  return popular[:20]
 
-  for word, score in popular[:20]:
-    print score, word
+def print_stats(id):
+  url = "https://hn.algolia.com/api/v1/items/{}".format(id)
+  contents = retrieve_json(url)
+  print contents['title']
+
+  popular = parse(contents)
+  for word, score in popular:
+    print word
+
+def main():
+  ids = [7679422, 7324231]
+  for id in ids:
+    print_stats(id)
 
 if __name__ == '__main__':
   main()
